@@ -1,7 +1,11 @@
+import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.SourcesJar
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
-    id("maven-publish")
+    id("com.vanniktech.maven.publish")
 }
 
 android {
@@ -38,12 +42,6 @@ android {
             isIncludeAndroidResources = true
         }
     }
-
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
 }
 
 dependencies {
@@ -77,15 +75,54 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("release") {
-                from(components["release"])
-                groupId = "io.appsynk"
-                artifactId = "sdk"
-                version = "1.0.0"
+// Maven Central publishing via the Sonatype Central Portal (com.vanniktech.maven.publish).
+// Credentials and the in-memory signing key are supplied at publish time through
+// ORG_GRADLE_PROJECT_* environment variables (see .github/workflows/publish-maven.yml).
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+
+    coordinates("io.appsynk", "sdk", "1.0.0")
+
+    // Release variant with a sources jar and an (empty) javadoc jar — the empty javadoc
+    // jar satisfies Central's requirement, which is standard for Kotlin/Android libraries.
+    configure(
+        AndroidSingleVariantLibrary(
+            variant = "release",
+            sourcesJar = SourcesJar.Sources(),
+            javadocJar = JavadocJar.Empty(),
+        ),
+    )
+
+    pom {
+        name.set("AppSynk Android SDK")
+        description.set(
+            "Kotlin SDK for Android install tracking, event measurement, and attribution.",
+        )
+        inceptionYear.set("2025")
+        url.set("https://github.com/chris-tran21/appsynk-android-sdk")
+
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
+                distribution.set("repo")
             }
+        }
+
+        developers {
+            developer {
+                id.set("appsynk")
+                name.set("AppSynk")
+                email.set("contact@appsynk.io")
+                url.set("https://github.com/chris-tran21")
+            }
+        }
+
+        scm {
+            url.set("https://github.com/chris-tran21/appsynk-android-sdk")
+            connection.set("scm:git:git://github.com/chris-tran21/appsynk-android-sdk.git")
+            developerConnection.set("scm:git:ssh://git@github.com/chris-tran21/appsynk-android-sdk.git")
         }
     }
 }

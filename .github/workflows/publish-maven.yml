@@ -1,0 +1,75 @@
+name: Publish to Maven Central
+
+# Manually-triggered publish of io.appsynk:sdk:1.0.0 to Maven Central via the
+# Sonatype Central Portal, using the com.vanniktech.maven.publish plugin.
+#
+# Required repository secrets:
+#   SONATYPE_USERNAME   Central Portal token username
+#   SONATYPE_PASSWORD   Central Portal token password
+#   SIGNING_KEY         base64 of the ASCII-armored GPG private key
+#   SIGNING_PASSWORD    GPG key passphrase
+#   SIGNING_KEY_ID      GPG key id (the 8-char short id is derived from it)
+
+on:
+  workflow_dispatch:
+    inputs:
+      auto_release:
+        description: "Auto-release after upload? false = upload only, then click Publish in the Central Portal"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode GPG signing key
+        env:
+          SIGNING_KEY_B64: ${{ secrets.SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SIGNING_KEY_B64:-}" ]; then
+            echo "::error::Missing repository secret SIGNING_KEY"; exit 1
+          fi
+          # The plugin expects the ASCII-armored key; our secret is base64, so decode it.
+          # Written to GITHUB_ENV (not printed) for the publish step to consume.
+          {
+            echo "ORG_GRADLE_PROJECT_signingInMemoryKey<<__GPG_KEY_EOF__"
+            printf '%s' "$SIGNING_KEY_B64" | base64 -d
+            echo ""
+            echo "__GPG_KEY_EOF__"
+          } >> "$GITHUB_ENV"
+
+      - name: Publish
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+          SIGNING_KEY_ID_FULL: ${{ secrets.SIGNING_KEY_ID }}
+          AUTO_RELEASE: ${{ inputs.auto_release }}
+        run: |
+          set -euo pipefail
+          # Gradle's signing plugin uses the 8-char short key id.
+          export ORG_GRADLE_PROJECT_signingInMemoryKeyId="${SIGNING_KEY_ID_FULL: -8}"
+
+          if [ "${AUTO_RELEASE}" = "true" ]; then
+            echo "Publishing AND auto-releasing io.appsynk:sdk:1.0.0 ..."
+            ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache --stacktrace
+          else
+            echo "Uploading io.appsynk:sdk:1.0.0 to the Central Portal (manual release) ..."
+            ./gradlew publishToMavenCentral --no-configuration-cache --stacktrace
+          fi
