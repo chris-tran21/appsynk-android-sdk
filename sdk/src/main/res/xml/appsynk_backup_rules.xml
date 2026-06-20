@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    AppSynk SDK backup exclusion rules for Android 12+ (API 31+).
+
+    Reference from the host app's <application> tag:
+        android:dataExtractionRules="@xml/appsynk_backup_rules"
+    or merge the <exclude> entries below into your existing data-extraction-rules file.
+
+    Excludes the install instance id (appsynk_id SharedPreferences) from cloud backup AND device
+    transfer, so it can never be restored across installs — a restored id would make two distinct
+    installs share one id and corrupt attribution.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="appsynk_id.xml" />
+        <!-- Install-state flags (install_tracked / install_date / app_version): a restored copy would
+             suppress the install on a new device, so exclude them too. -->
+        <exclude domain="sharedpref" path="appsynk_prefs.xml" />
+        <!-- Transient on-disk event queue — never restore in-flight events to another install. -->
+        <exclude domain="file" path="appsynk/" />
+        <!-- Encrypted consent store: its Keystore master key doesn't transfer across devices, so a
+             restored copy can't be decrypted. Referrer cache: must not leak a stale gclid to a fresh install. -->
+        <exclude domain="sharedpref" path="appsynk_privacy.xml" />
+        <exclude domain="sharedpref" path="appsynk_referrer.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="appsynk_id.xml" />
+        <exclude domain="sharedpref" path="appsynk_prefs.xml" />
+        <exclude domain="file" path="appsynk/" />
+        <exclude domain="sharedpref" path="appsynk_privacy.xml" />
+        <exclude domain="sharedpref" path="appsynk_referrer.xml" />
+    </device-transfer>
+</data-extraction-rules>

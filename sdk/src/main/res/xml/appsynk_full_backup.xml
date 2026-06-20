@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    AppSynk SDK backup exclusion rules for Android 6–11 (API 23–30).
+
+    Reference from the host app's <application> tag:
+        android:fullBackupContent="@xml/appsynk_full_backup"
+    or merge the <exclude> entry below into your existing full-backup-content file.
+
+    Excludes the install instance id (appsynk_id SharedPreferences) from Auto Backup, so it can
+    never be restored across installs (which would corrupt attribution).
+-->
+<full-backup-content>
+    <exclude domain="sharedpref" path="appsynk_id.xml" />
+    <!-- Install-state flags (install_tracked / install_date / app_version): a restored copy would
+         suppress the install on a new device, so exclude them too. -->
+    <exclude domain="sharedpref" path="appsynk_prefs.xml" />
+    <!-- Transient on-disk event queue — never restore in-flight events to another install. -->
+    <exclude domain="file" path="appsynk/" />
+    <!-- Encrypted consent store: its Keystore master key doesn't transfer across devices, so a
+         restored copy can't be decrypted. Referrer cache: must not leak a stale gclid to a fresh install. -->
+    <exclude domain="sharedpref" path="appsynk_privacy.xml" />
+    <exclude domain="sharedpref" path="appsynk_referrer.xml" />
+</full-backup-content>

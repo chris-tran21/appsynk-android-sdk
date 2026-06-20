@@ -1,0 +1,8 @@
+# Version catalog for the AppSynk Android SDK.
+[versions]
+agp = "8.5.2"
+kotlin = "1.9.24"
+
+[plugins]
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
