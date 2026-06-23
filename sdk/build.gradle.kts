@@ -96,7 +96,7 @@ mavenPublishing {
             "Kotlin SDK for Android install tracking, event measurement, and attribution.",
         )
         inceptionYear.set("2025")
-        url.set("https://github.com/chris-tran21/appsynk-android-sdk")
+        url.set("https://github.com/appsynk/appsynk-android-sdk")
 
         licenses {
             license {
@@ -111,14 +111,14 @@ mavenPublishing {
                 id.set("appsynk")
                 name.set("AppSynk")
                 email.set("contact@appsynk.io")
-                url.set("https://github.com/chris-tran21")
+                url.set("https://github.com/appsynk")
             }
         }
 
         scm {
-            url.set("https://github.com/chris-tran21/appsynk-android-sdk")
-            connection.set("scm:git:git://github.com/chris-tran21/appsynk-android-sdk.git")
-            developerConnection.set("scm:git:ssh://git@github.com/chris-tran21/appsynk-android-sdk.git")
+            url.set("https://github.com/appsynk/appsynk-android-sdk")
+            connection.set("scm:git:git://github.com/appsynk/appsynk-android-sdk.git")
+            developerConnection.set("scm:git:ssh://git@github.com/appsynk/appsynk-android-sdk.git")
         }
     }
 }
